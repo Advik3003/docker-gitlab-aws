@@ -1,0 +1,38 @@
+stages:
+    - build
+    - dockerize
+    - push
+
+
+# Stage 1 Build Stage (Maven build)
+build-job:
+    stage: build
+    image: maven:3.9.9-eclipse-temurin-17
+    script:
+        - mvn clean package -DskipTests
+    artifacts:
+        paths:
+            - target/*.jar   #save jar file for next stages
+
+# Step 1: Build Stage (Maven build)
+docker-build-job:
+    stage: dockerize
+    image: docker:20.10.17
+    services:
+      - docker:20.10.17-dind
+    script:
+        - docker build -t $CI_REGISTRY_IMAGE: latest           #$CI_COMMIT_SHA .
+    dependencies:
+        - build-job
+
+# Step 3: Push Image to GitLab Container Registry
+docker-push-job:
+  stage: push
+  image: docker:20.10.17
+  services:
+    - docker:20.10.17-dind
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:latest
+  dependencies:
+    - docker-build-job
