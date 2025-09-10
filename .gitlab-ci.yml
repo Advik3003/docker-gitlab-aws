@@ -2,8 +2,6 @@ stages:
     - build
     - dockerize
     - push
-
-
 # Stage 1 Build Stage (Maven build)
 build-job:
     stage: build
